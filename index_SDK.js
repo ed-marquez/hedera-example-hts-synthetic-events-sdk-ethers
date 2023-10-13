@@ -36,37 +36,15 @@ async function main() {
 	const [tokenId, tokenInfo] = await htsTokens.createFtFcn("HBAR ROCKS", "HROCK", 100, treasuryId, treasuryKey, client);
 	const tokenAddress = tokenId.toSolidityAddress();
 	console.log(`\n- Token ID: ${tokenId}`);
-	console.log(`\n- Token Address: ${tokenAddress}`);
+	console.log(`- Token Address: ${tokenAddress}`);
 	console.log(`- Initial token supply: ${tokenInfo.totalSupply.low}`);
-
-	// STEP 2 ===================================
-	console.log(`\nSTEP 2 ===================================\n`);
-	console.log(`- Transfers: (Treasury => Alice) + (A=>T) + (T=>A) ...\n`);
-
-	let tBal = 5;
-	let [transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, treasuryId, aliceId, tBal, treasuryKey, client);
-	console.log(`- Transfer1 status: ${transferFtRx.status}`);
-	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
-
-	tBal = 3;
-	[transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, aliceId, treasuryId, tBal, aliceKey, client);
-	console.log(`- Transfer2 status: ${transferFtRx.status}`);
-	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
-
-	tBal = 1;
-	[transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, treasuryId, aliceId, tBal, treasuryKey, client);
-	console.log(`- Transfer3 status: ${transferFtRx.status}`);
-	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
-
-	await queries.balanceCheckerFcn(treasuryId, tokenId, client);
-	await queries.balanceCheckerFcn(aliceId, tokenId, client);
-
-	// STEP 3 ===================================
-	console.log(`\nSTEP 3 ===================================\n`);
-	console.log(`- Subscribe and listen to Transfer events...\n`);
 
 	const tokenContract = new ethers.Contract(tokenAddress, abi_ERC20, provider);
 
+	// STEP 2 ===================================
+	console.log(`\nSTEP 2 ===================================\n`);
+	console.log(`- Subscribe to Transfer events...\n`);
+	
 	tokenContract.on("Transfer", (from, to, amount, event) => {
 		console.log(`\n-NEW TRANSFER EVENT: ====================`);
 		console.log(`From: ${from}, To: ${to}, Amount: ${amount.toString()}`);
@@ -76,11 +54,33 @@ async function main() {
 		// console.log(event);
 	});
 
-	//
+	// STEP 3 ===================================
+	console.log(`\nSTEP 3 ===================================\n`);
+	console.log(`- Perform Transfers: (Treasury => Alice) + (A=>T) + (T=>A) & listen to events...\n`);
 
-	console.log(`
+	await queries.balanceCheckerFcn(treasuryId, tokenId, client);
+	await queries.balanceCheckerFcn(aliceId, tokenId, client);
+
+	let tBal = 5;
+	let [transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, treasuryId, aliceId, tBal, treasuryKey, client);
+	console.log(`\n- Transfer1 status: ${transferFtRx.status}`);
+	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
+
+	tBal = 3;
+	[transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, aliceId, treasuryId, tBal, aliceKey, client);
+	console.log(`\n- Transfer2 status: ${transferFtRx.status}`);
+	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
+
+	tBal = 1;
+	[transferFtRx, transferFtTx] = await htsTokens.transferFtFcn(tokenId, treasuryId, aliceId, tBal, treasuryKey, client);
+	console.log(`\n- Transfer3 status: ${transferFtRx.status}`);
+	console.log(`- https://hashscan.io/testnet/transaction/${transferFtTx.transactionId}\n`);
+
+
+	setTimeout(()=>{	
+		console.log(`
 ====================================================
 🎉🎉 THE END - NOW JOIN: https://hedera.com/discord
-====================================================\n`);
+====================================================\n`);},5000);
 }
 main();
